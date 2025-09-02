@@ -4,35 +4,35 @@ const OFFLINE_URL = '/offline.html';
 
 // Assets essenciais para cache
 const ESSENTIAL_ASSETS = [
-    '/',
-    '/index.html',
-    '/style.css',
-    '/main.js',
-    '/visual-effects.js',
-    '/animations.js',
-    '/notifications.js',
-    '/ar-debug.js',
-    '/test-debug.js',
-    '/offline.html',
-    '/site.webmanifest',
-    '/favicon.ico',
-    '/android-chrome-192x192.png',
-    '/android-chrome-512x512.png',
-    '/apple-touch-icon.png',
-    '/favicon-16x16.png',
-    '/favicon-32x32.png'
+    './',
+    './index.html',
+    './style.css',
+    './main.js',
+    './visual-effects.js',
+    './animations.js',
+    './notifications.js',
+    './ar-debug.js',
+    './test-debug.js',
+    './offline.html',
+    './site.webmanifest',
+    './favicon.ico',
+    './android-chrome-192x192.png',
+    './android-chrome-512x512.png',
+    './apple-touch-icon.png',
+    './favicon-16x16.png',
+    './favicon-32x32.png'
 ];
 
 // Assets de mídia para cache (modelos 3D, áudios, imagens)
 const MEDIA_ASSETS = [
-    '/assets/models/ghost.glb',
-    '/assets/models/geleia.glb',
-    '/assets/audio/proton-beam.mp3',
-    '/assets/audio/ghost-capture.mp3',
-    '/assets/audio/inventory_full.mp3',
-    '/assets/images/logo.png',
-    '/assets/images/ghost_trap.png',
-    '/assets/images/proton_pack.png'
+    './assets/models/ghost.glb',
+    './assets/models/geleia.glb',
+    './assets/audio/proton-beam.mp3',
+    './assets/audio/ghost-capture.mp3',
+    './assets/audio/inventory_full.mp3',
+    './assets/images/logo.png',
+    './assets/images/ghost_trap.png',
+    './assets/images/proton_pack.png'
 ];
 
 // CDN Assets (bibliotecas externas)
