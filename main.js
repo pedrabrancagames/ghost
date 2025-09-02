@@ -32,6 +32,7 @@ AFRAME.registerComponent('game-manager', {
         this.initializeDOMElements();
         this.initializeApp();
         this.addEventListeners();
+        this.initializeMultiplayer();
 
         this.gameInitialized = false;
         this.hitTestSource = null;
@@ -52,6 +53,7 @@ AFRAME.registerComponent('game-manager', {
         this.html5QrCode = null;
         this.currentRotatorEntity = null; // Novo: para controlar a animação de rotação do fantasma ativo
         this.currentBobberEntity = null; // Novo: para controlar a animação de flutuação do fantasma ativo
+        this.multiplayerManager = null; // Sistema multiplayer
     },
 
     bindMethods: function () {
@@ -182,6 +184,15 @@ AFRAME.registerComponent('game-manager', {
         this.el.sceneEl.addEventListener('enter-vr', () => {
             this.initGame();
         });
+    },
+
+    initializeMultiplayer: function () {
+        // Inicializar sistema multiplayer após carregamento
+        if (typeof MultiplayerManager !== 'undefined') {
+            this.multiplayerManager = new MultiplayerManager(this);
+        } else {
+            console.warn('⚠️ MultiplayerManager não encontrado');
+        }
     },
 
     showNotification: function (message) {
@@ -382,6 +393,14 @@ AFRAME.registerComponent('game-manager', {
         this.gameUi.classList.remove('hidden');
         this.initMap();
         this.setupHitTest();
+        
+        // Configurar localização no multiplayer
+        if (this.multiplayerManager && this.selectedLocation) {
+            const locationName = Object.keys(this.locations).find(
+                key => this.locations[key] === this.selectedLocation
+            );
+            this.multiplayerManager.setLocation(locationName);
+        }
     },
 
     initMap: function () {
@@ -412,6 +431,55 @@ AFRAME.registerComponent('game-manager', {
             if(this.ghostMarker) this.ghostMarker.remove();
             return;
         }
+        
+        // Buscar fantasmas do Firebase primeiro
+        this.loadGhostsFromFirebase().then((firebaseGhosts) => {
+            if (firebaseGhosts.length > 0) {
+                // Usar fantasma do Firebase
+                const randomGhost = firebaseGhosts[Math.floor(Math.random() * firebaseGhosts.length)];
+                this.ghostData = randomGhost;
+                this.updateGhostMarker();
+            } else {
+                // Fallback: gerar fantasma local
+                this.generateLocalGhost();
+            }
+        }).catch(() => {
+            // Em caso de erro, gerar fantasma local
+            this.generateLocalGhost();
+        });
+    },
+
+    loadGhostsFromFirebase: function () {
+        return new Promise((resolve, reject) => {
+            if (!this.database) {
+                reject('Database não inicializado');
+                return;
+            }
+
+            const locationName = Object.keys(this.locations).find(
+                key => this.locations[key] === this.selectedLocation
+            );
+
+            const ghostsRef = this.database.ref('ghosts');
+            ghostsRef.orderByChild('location').equalTo(locationName).once('value')
+                .then((snapshot) => {
+                    const ghosts = [];
+                    snapshot.forEach((childSnapshot) => {
+                        const ghost = childSnapshot.val();
+                        if (!ghost.capturedBy) { // Apenas fantasmas não capturados
+                            ghosts.push({
+                                ...ghost,
+                                firebaseId: childSnapshot.key
+                            });
+                        }
+                    });
+                    resolve(ghosts);
+                })
+                .catch(reject);
+        });
+    },
+
+    generateLocalGhost: function () {
         const radius = 0.0001;
         const isStrong = Math.random() < 0.25;
         this.ghostData = {
@@ -419,9 +487,15 @@ AFRAME.registerComponent('game-manager', {
             lon: this.selectedLocation.lon + (Math.random() - 0.5) * radius * 2,
             type: isStrong ? 'Fantasma Forte' : 'Fantasma Comum',
             points: isStrong ? 25 : 10,
-            captureDuration: isStrong ? this.CAPTURE_DURATION_STRONG : this.CAPTURE_DURATION_NORMAL
+            captureDuration: isStrong ? this.CAPTURE_DURATION_STRONG : this.CAPTURE_DURATION_NORMAL,
+            health: isStrong ? 2 : 1,
+            isLocal: true // Marca como fantasma local
         };
-        
+        this.updateGhostMarker();
+    },
+
+    updateGhostMarker: function () {
+        const isStrong = this.ghostData.type === 'Fantasma Forte';
         const ghostEmoji = isStrong ? '🎃' : '👻';
         const ghostIcon = L.divIcon({
             className: 'ghost-marker',
@@ -430,8 +504,11 @@ AFRAME.registerComponent('game-manager', {
             iconAnchor: [15, 15]
         });
 
-        if(this.ghostMarker) this.ghostMarker.setLatLng([this.ghostData.lat, this.ghostData.lon]).setIcon(ghostIcon);
-        else this.ghostMarker = L.marker([this.ghostData.lat, this.ghostData.lon], { icon: ghostIcon }).addTo(this.map);
+        if(this.ghostMarker) {
+            this.ghostMarker.setLatLng([this.ghostData.lat, this.ghostData.lon]).setIcon(ghostIcon);
+        } else {
+            this.ghostMarker = L.marker([this.ghostData.lat, this.ghostData.lon], { icon: ghostIcon }).addTo(this.map);
+        }
     },
 
     startGps: function () {
@@ -499,6 +576,24 @@ AFRAME.registerComponent('game-manager', {
 
     startCapture: function () {
         if (this.isCapturing || !this.placedObjects.ghost || this.inventory.length >= this.INVENTORY_LIMIT) return;
+
+        // Verificar se é um fantasma forte e se precisa de cooperação
+        if (this.ghostData.type === 'Fantasma Forte' && this.multiplayerManager) {
+            if (!this.multiplayerManager.canStartCooperativeCapture(this.ghostData.type)) {
+                if (window.notificationSystem) {
+                    window.notificationSystem.warning(
+                        'Fantasma Forte detectado! Você precisa de outro jogador próximo para capturá-lo.',
+                        { duration: 5000 }
+                    );
+                }
+                return;
+            }
+
+            // Iniciar captura cooperativa
+            if (this.ghostData.firebaseId) {
+                this.multiplayerManager.startCooperativeCapture(this.ghostData.firebaseId, this.ghostData);
+            }
+        }
 
         // Pausa as animações do fantasma
         if (this.currentRotatorEntity && this.currentBobberEntity) {

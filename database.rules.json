@@ -1,0 +1,43 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "$uid === auth.uid",
+        ".write": "$uid === auth.uid"
+      }
+    },
+    "ghosts": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$ghostId": {
+        "captureAttempts": {
+          "$playerId": {
+            ".write": "$playerId === auth.uid"
+          }
+        },
+        "captureComplete": {
+          ".write": "auth != null"
+        }
+      }
+    },
+    "players": {
+      ".read": "auth != null",
+      "$playerId": {
+        ".write": "$playerId === auth.uid"
+      }
+    },
+    "chat": {
+      "$location": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "$messageId": {
+          ".validate": "newData.hasChildren(['playerId', 'playerName', 'message', 'timestamp']) && newData.child('playerId').val() === auth.uid"
+        }
+      }
+    },
+    "notifications": {
+      ".read": "auth != null",
+      ".write": false
+    }
+  }
+}
