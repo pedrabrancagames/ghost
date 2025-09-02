@@ -46,7 +46,7 @@ class MultiplayerManager {
         
         // Escutar notificações do Firebase
         if (this.gameManager.database) {
-            const notificationsRef = this.gameManager.database.ref('notifications');
+                        const notificationsRef = ref(this.gameManager.database, 'notifications');
             notificationsRef.on('child_added', (snapshot) => {
                 this.handleNotification(snapshot.val());
             });
@@ -154,7 +154,7 @@ class MultiplayerManager {
             this.isOnline = true;
             
             // Registrar jogador no Firebase
-            const playersRef = this.gameManager.database.ref(`players/${user.uid}`);
+                        const playersRef = ref(this.gameManager.database, `players/${user.uid}`);
             await playersRef.set(this.currentPlayer);
             
             // Configurar listeners
@@ -190,7 +190,7 @@ class MultiplayerManager {
         
         // Remover jogador do Firebase
         if (this.currentPlayer) {
-            const playersRef = this.gameManager.database.ref(`players/${this.currentPlayer.id}`);
+                    const playersRef = ref(this.gameManager.database, `players/${this.currentPlayer.id}`);
             playersRef.remove();
         }
         
@@ -209,21 +209,21 @@ class MultiplayerManager {
         if (!this.gameManager.database) return;
         
         // Escutar outros jogadores na mesma localização
-        const playersRef = this.gameManager.database.ref('players');
+                const playersRef = ref(this.gameManager.database, 'players');
         playersRef.on('value', (snapshot) => {
             this.updateNearbyPlayers(snapshot.val() || {});
         });
         
         // Escutar mensagens de chat
         if (this.locationName) {
-            const chatRef = this.gameManager.database.ref(`chat/${this.locationName}`);
+            const chatRef = ref(this.gameManager.database, `chat/${this.locationName}`);
             chatRef.on('child_added', (snapshot) => {
                 this.handleChatMessage(snapshot.val());
             });
         }
         
         // Escutar fantasmas sendo capturados
-        const ghostsRef = this.gameManager.database.ref('ghosts');
+                const ghostsRef = ref(this.gameManager.database, 'ghosts');
         ghostsRef.on('child_changed', (snapshot) => {
             this.handleGhostUpdate(snapshot.val());
         });
@@ -262,7 +262,7 @@ class MultiplayerManager {
         this.currentPlayer.position = position;
         
         // Atualizar no Firebase
-        const playerRef = this.gameManager.database.ref(`players/${this.currentPlayer.id}`);
+                const playerRef = ref(this.gameManager.database, `players/${this.currentPlayer.id}`);
         await playerRef.update({
             position,
             lastSeen: Date.now()
@@ -376,7 +376,7 @@ class MultiplayerManager {
         };
         
         // Enviar para Firebase
-        const chatRef = this.gameManager.database.ref(`chat/${this.locationName}`);
+                const chatRef = ref(this.gameManager.database, `chat/${this.locationName}`);
         await chatRef.push(chatMessage);
     }
     
@@ -449,7 +449,7 @@ class MultiplayerManager {
         }
         
         // Registrar tentativa de captura
-        const captureRef = this.gameManager.database.ref(`ghosts/${ghostId}/captureAttempts/${this.currentPlayer.id}`);
+                const captureRef = ref(this.gameManager.database, `ghosts/${ghostId}/captureAttempts/${this.currentPlayer.id}`);
         await captureRef.set({
             playerId: this.currentPlayer.id,
             playerName: this.currentPlayer.displayName,
@@ -459,7 +459,7 @@ class MultiplayerManager {
         
         // Atualizar status local
         this.currentPlayer.isCapturing = true;
-        await this.gameManager.database.ref(`players/${this.currentPlayer.id}`).update({
+                await update(ref(this.gameManager.database, `players/${this.currentPlayer.id}`), {
             isCapturing: true
         });
         
@@ -476,7 +476,7 @@ class MultiplayerManager {
         coopCapture.classList.remove('hidden');
         
         // Escutar atualizações da captura
-        const ghostRef = this.gameManager.database.ref(`ghosts/${ghostId}`);
+                const ghostRef = ref(this.gameManager.database, `ghosts/${ghostId}`);
         const captureListener = ghostRef.on('value', (snapshot) => {
             const ghost = snapshot.val();
             if (!ghost) {
@@ -527,7 +527,7 @@ class MultiplayerManager {
             
             if (progress >= 100) {
                 // Finalizar captura
-                const ghostRef = this.gameManager.database.ref(`ghosts/${ghost.id}/captureComplete`);
+                                const ghostRef = ref(this.gameManager.database, `ghosts/${ghost.id}/captureComplete`);
                 ghostRef.set({ timestamp: Date.now() });
             }
         } else {
@@ -545,7 +545,7 @@ class MultiplayerManager {
         // Resetar status de captura
         if (this.currentPlayer) {
             this.currentPlayer.isCapturing = false;
-            this.gameManager.database.ref(`players/${this.currentPlayer.id}`).update({
+                        update(ref(this.gameManager.database, `players/${this.currentPlayer.id}`), {
                 isCapturing: false
             });
         }
@@ -624,7 +624,7 @@ class MultiplayerManager {
         
         // Reconfigurar listeners de chat para nova localização
         if (this.isOnline && this.gameManager.database) {
-            const chatRef = this.gameManager.database.ref(`chat/${locationName}`);
+                        const chatRef = ref(this.gameManager.database, `chat/${locationName}`);
             chatRef.on('child_added', (snapshot) => {
                 this.handleChatMessage(snapshot.val());
             });

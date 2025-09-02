@@ -574,7 +574,8 @@ AFRAME.registerComponent('game-manager', {
         }
     },
 
-    startCapture: function () {
+        startCapture: function () {
+        console.log("startCapture: this.placedObjects", this.placedObjects);
         if (this.isCapturing || !this.placedObjects.ghost || this.inventory.length >= this.INVENTORY_LIMIT) return;
 
         // Verificar se é um fantasma forte e se precisa de cooperação
