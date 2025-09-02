@@ -15,12 +15,12 @@ const ESSENTIAL_ASSETS = [
     './test-debug.js',
     './offline.html',
     './site.webmanifest',
-    './favicon.ico',
-    './android-chrome-192x192.png',
-    './android-chrome-512x512.png',
-    './apple-touch-icon.png',
-    './favicon-16x16.png',
-    './favicon-32x32.png'
+    './assets/pwa/favicon.ico',
+    './assets/pwa/android-chrome-192x192.png',
+    './assets/pwa/android-chrome-512x512.png',
+    './assets/pwa/apple-touch-icon.png',
+    './assets/pwa/favicon-16x16.png',
+    './assets/pwa/favicon-32x32.png'
 ];
 
 // Assets de mídia para cache (modelos 3D, áudios, imagens)
