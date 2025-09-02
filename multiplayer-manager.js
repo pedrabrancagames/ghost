@@ -1,3 +1,5 @@
+import { ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
 /**
  * Sistema Multiplayer - Ghostbusters AR
  * Gerencia jogadores online, cooperação e chat local
