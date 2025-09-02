@@ -1,4 +1,4 @@
-import { ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { ref, update, onChildAdded, onValue, onChildChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 /**
  * Sistema Multiplayer - Ghostbusters AR
@@ -49,7 +49,7 @@ class MultiplayerManager {
         // Escutar notificações do Firebase
         if (this.gameManager.database) {
                         const notificationsRef = ref(this.gameManager.database, 'notifications');
-            notificationsRef.on('child_added', (snapshot) => {
+                        onChildAdded(notificationsRef, (snapshot) => {
                 this.handleNotification(snapshot.val());
             });
         }
@@ -212,21 +212,21 @@ class MultiplayerManager {
         
         // Escutar outros jogadores na mesma localização
                 const playersRef = ref(this.gameManager.database, 'players');
-        playersRef.on('value', (snapshot) => {
+                onValue(playersRef, (snapshot) => {
             this.updateNearbyPlayers(snapshot.val() || {});
         });
         
         // Escutar mensagens de chat
         if (this.locationName) {
             const chatRef = ref(this.gameManager.database, `chat/${this.locationName}`);
-            chatRef.on('child_added', (snapshot) => {
+            onChildAdded(chatRef, (snapshot) => {
                 this.handleChatMessage(snapshot.val());
             });
         }
         
         // Escutar fantasmas sendo capturados
                 const ghostsRef = ref(this.gameManager.database, 'ghosts');
-        ghostsRef.on('child_changed', (snapshot) => {
+                onChildChanged(ghostsRef, (snapshot) => {
             this.handleGhostUpdate(snapshot.val());
         });
     }
@@ -627,7 +627,7 @@ class MultiplayerManager {
         // Reconfigurar listeners de chat para nova localização
         if (this.isOnline && this.gameManager.database) {
                         const chatRef = ref(this.gameManager.database, `chat/${locationName}`);
-            chatRef.on('child_added', (snapshot) => {
+            onChildAdded(chatRef, (snapshot) => {
                 this.handleChatMessage(snapshot.val());
             });
         }
