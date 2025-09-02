@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+ 
+<head>
+    <meta charset="utf-8">
+    <title>Ghostbusters AR</title>
+    <meta name="description" content="Capture fantasmas que invadiram o seu mundo.">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#92F428">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GhostAR">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Icons -->
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <!-- A-Frame & Libraries -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Project Files -->
+    <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+    <!-- A-Frame Scene -->
+    <a-scene id="ar-scene" game-manager
+        webxr="requiredFeatures: hit-test, local-floor; optionalFeatures: dom-overlay; overlayElement: #ui-container;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true; colorManagement: true; antialias: true; physicallyCorrectLights: true;"
+        background="color: transparent;">
+        <a-assets>
+            <a-asset-item id="ghost-model" src="assets/models/ghost.glb"></a-asset-item>
+            <a-asset-item id="geleia-model" src="assets/models/geleia.glb"></a-asset-item>
+            <audio id="proton-beam-sound" src="assets/audio/proton-beam.mp3" preload="auto"></audio>
+            <audio id="ghost-capture-sound" src="assets/audio/ghost-capture.mp3" preload="auto"></audio>
+            <audio id="inventory-full-sound" src="assets/audio/inventory_full.mp3" preload="auto"></audio>
+        </a-assets>
+        <a-light type="ambient" color="#FFF" intensity="0.7"></a-light>
+        <a-light type="directional" color="#FFF" intensity="0.8" position="-1 2 1"></a-light>
+        <a-camera fov="80">
+            <!-- Proton Beam antigo removido - agora usando partículas -->
+        </a-camera>
+        <a-entity id="reticle" visible="false"
+            geometry="primitive: ring; radius-inner: 0.04; radius-outer: 0.06;"
+            material="color: #92F428; shader: flat;"></a-entity>
+        
+        <!-- Fantasmas com animação aninhada para órbita e flutuação corretas -->
+        <a-entity id="ghost-comum" visible="false">
+            <!-- 1. Orbitador: Gira em torno do seu eixo (o ponto central) -->
+            <a-entity id="ghost-comum-rotator" animation__rotation="property: rotation; to: 0 360 0; dur: 8000; loop: true; easing: linear;">
+                <!-- 2. Modelo: Afastado 1m para criar a órbita e com animação de flutuação (bob) -->
+                <a-entity id="ghost-comum-bobber" gltf-model="#ghost-model" position="1 0.3 0"
+                    animation__bob="property: position; from: 1 0.3 0; to: 1 0.8 0; dur: 3000; dir: alternate; loop: true; easing: easeInOutQuad;">
+                </a-entity>
+            </a-entity>
+        </a-entity>
+        <a-entity id="ghost-forte" visible="false">
+            <!-- 1. Orbitador: Gira mais rápido e na direção oposta -->
+            <a-entity id="ghost-forte-rotator" animation__rotation="property: rotation; to: 0 -360 0; dur: 6000; loop: true; easing: linear;">
+                <!-- 2. Modelo: Círculo um pouco maior e flutuação mais pronunciada -->
+                <a-entity id="ghost-forte-bobber" gltf-model="#geleia-model" position="1.2 0.4 0"
+                    animation__bob="property: position; from: 1.2 0.4 0; to: 1.2 1.0 0; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad;">
+                </a-entity>
+            </a-entity>
+        </a-entity>
+        
+        <a-entity id="ecto-1" visible="false" geometry="primitive: box; width: 1.5; height: 0.8; depth: 3.5" material="color: #FFFFFF;"></a-entity>
+    </a-scene>
+
+    <!-- UI Container -->
+    <div id="ui-container">
+        <div id="login-screen" class="ui-screen ui-element">
+            <img id="logo" src="assets/images/logo.png" alt="Ghostbusters Logo">
+            <p id="loading-info">Autenticação necessária para caçar.</p>
+            <div id="auth-buttons-container">
+                <button id="google-login-button" class="auth-button ui-element">Login com Google</button>
+                <button id="email-login-show-button" class="auth-button ui-element">Login com Email</button>
+                <button id="anonymous-login-button" class="auth-button ui-element">Jogar como Visitante</button>
+            </div>
+        </div>
+
+        <div id="email-login-screen" class="ui-screen ui-element hidden">
+            <img id="logo-small" src="assets/images/logo.png" alt="Ghostbusters Logo">
+            <h2>Login com Email</h2>
+            <div class="input-group">
+                <input type="email" id="email-input" placeholder="Email">
+            </div>
+            <div class="input-group">
+                <input type="password" id="password-input" placeholder="Senha">
+            </div>
+            <p id="auth-error-message" class="error-text"></p>
+            <div id="email-auth-buttons-container">
+                <button id="email-login-button" class="action-button ui-element">Entrar</button>
+                <button id="email-signup-button" class="action-button ui-element">Cadastrar</button>
+            </div>
+            <button id="back-to-main-login" class="text-button ui-element">Voltar</button>
+        </div>
+
+        <div id="location-screen" class="ui-screen ui-element hidden">
+            <h2>Selecione a Área de Caça</h2>
+            <p id="location-info-text">Escolha um local para começar a patrulha.</p>
+            <div id="location-buttons-container">
+                <button class="location-button ui-element" data-location-name="Praça Central">Praça Central</button>
+                <button class="location-button ui-element" data-location-name="Parque da Cidade">Parque da Cidade</button>
+                <button class="location-button ui-element" data-location-name="Casa do Vô">Casa do Vô</button>
+            </div>
+            <button id="enter-button" class="action-button ui-element" disabled>Iniciar Caça</button>
+        </div>
+
+        <div id="game-ui" class="hidden">
+            <img id="game-logo" src="assets/images/logo.png" alt="Logo">
+            <div id="inventory-icon-container" class="ui-element">
+                <img id="inventory-icon" src="assets/images/ghost_trap.png" alt="Inventário">
+                <div id="inventory-badge">0/5</div>
+            </div>
+            <img id="proton-pack-icon" class="ui-element" src="assets/images/proton_pack.png" alt="Proton Pack">
+            <div id="proton-pack-progress-bar" class="ui-element"><div id="proton-pack-progress-fill"></div></div>
+            <div id="minimap" class="ui-element"></div>
+            <div id="distance-info"></div>
+        </div>
+
+        <div id="inventory-modal" class="ui-screen ui-element hidden">
+            <div id="inventory-content">
+                <div id="inventory-header">
+                    <h2>Inventário de Fantasmas</h2>
+                    <button id="close-inventory-button" class="ui-element">&times;</button>
+                </div>
+                <ul id="ghost-list"></ul>
+                <button id="deposit-button" class="action-button ui-element">Depositar Fantasmas</button>
+            </div>
+        </div>
+
+        <div id="qr-scanner-screen" class="ui-screen ui-element hidden">
+            <button id="close-scanner-button" class="ui-element">&times;</button>
+            <div id="qr-reader"></div>
+        </div>
+
+        <!-- Nova Janela de Notificação -->
+        <div id="notification-modal" class="ui-screen ui-element hidden">
+            <div id="notification-content">
+                <p id="notification-message"></p>
+                <button id="notification-close-button" class="action-button ui-element">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PWA e Loading -->
+    <script src="performance-monitor.js"></script>
+    <script src="progress-indicators.js"></script>
+    <script src="cache-manager.js"></script>
+    <script src="pwa-manager.js"></script>
+    <script src="loading-manager.js"></script>
+    <script src="app-initializer.js"></script>
+    
+    <!-- Sistemas de Efeitos Visuais -->
+    <script src="visual-effects.js"></script>
+    <script src="animations.js"></script>
+    <script src="notifications.js"></script>
+    <script src="test-debug.js"></script>
+    <script src="ar-debug.js"></script>
+    
+    <script type="module" src="main.js"></script>
+</body>
+
+</html>

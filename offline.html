@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Ghostbusters AR - Offline</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/favicon.ico" type="image/x-icon">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+            color: #92F428;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .offline-container {
+            max-width: 400px;
+            padding: 2rem;
+            background: rgba(146, 244, 40, 0.1);
+            border: 2px solid #92F428;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(146, 244, 40, 0.3);
+        }
+        
+        .ghost-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            color: #92F428;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        
+        p {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            color: #cccccc;
+        }
+        
+        .retry-button {
+            background: linear-gradient(45deg, #92F428, #7BC91F);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+        
+        .retry-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(146, 244, 40, 0.4);
+        }
+        
+        .status-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .cache-status {
+            display: flex;
+            justify-content: space-between;
+            margin: 0.5rem 0;
+        }
+        
+        .status-good { color: #92F428; }
+        .status-partial { color: #FFA500; }
+        .status-bad { color: #FF4444; }
+    </style>
+</head>
+<body>
+    <div class="offline-container">
+        <div class="ghost-icon">👻</div>
+        <h1>Você está offline!</h1>
+        <p>Parece que os fantasmas interferiram na sua conexão. Verifique sua internet e tente novamente.</p>
+        
+        <button class="retry-button" onclick="window.location.reload()">
+            Tentar Novamente
+        </button>
+        
+        <div class="status-info">
+            <h3>Status do Cache:</h3>
+            <div id="cache-info">Verificando cache...</div>
+        </div>
+    </div>
+
+    <script>
+        // Verifica status do cache
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                const messageChannel = new MessageChannel();
+                messageChannel.port1.onmessage = function(event) {
+                    const status = event.data;
+                    updateCacheStatus(status);
+                };
+                
+                registration.active.postMessage(
+                    { type: 'GET_CACHE_STATUS' },
+                    [messageChannel.port2]
+                );
+            });
+        }
+        
+        function updateCacheStatus(status) {
+            const cacheInfo = document.getElementById('cache-info');
+            
+            const essentialPercent = Math.round((status.essentialCached.cached / status.essentialCached.total) * 100);
+            const mediaPercent = Math.round((status.mediaCached.cached / status.mediaCached.total) * 100);
+            const cdnPercent = Math.round((status.cdnCached.cached / status.cdnCached.total) * 100);
+            
+            cacheInfo.innerHTML = `
+                <div class="cache-status">
+                    <span>Assets Essenciais:</span>
+                    <span class="${getStatusClass(essentialPercent)}">${essentialPercent}%</span>
+                </div>
+                <div class="cache-status">
+                    <span>Mídia:</span>
+                    <span class="${getStatusClass(mediaPercent)}">${mediaPercent}%</span>
+                </div>
+                <div class="cache-status">
+                    <span>Bibliotecas:</span>
+                    <span class="${getStatusClass(cdnPercent)}">${cdnPercent}%</span>
+                </div>
+                <div class="cache-status">
+                    <span>Total de itens:</span>
+                    <span class="status-good">${status.cachedItems}</span>
+                </div>
+            `;
+        }
+        
+        function getStatusClass(percent) {
+            if (percent >= 90) return 'status-good';
+            if (percent >= 50) return 'status-partial';
+            return 'status-bad';
+        }
+        
+        // Verifica conexão periodicamente
+        setInterval(() => {
+            if (navigator.onLine) {
+                window.location.reload();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Sistema de Efeitos Visuais</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            color: white;
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 30px 0;
+        }
+        
+        .test-button {
+            padding: 15px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .celebration { background: linear-gradient(45deg, #4CAF50, #8BC34A); }
+        .suction { background: linear-gradient(45deg, #2196F3, #03DAC6); }
+        .proton { background: linear-gradient(45deg, #92F428, #CDDC39); }
+        .ecto1 { background: linear-gradient(45deg, #FFD700, #FF6347); }
+        .failure { background: linear-gradient(45deg, #F44336, #FF5722); }
+        .clear { background: linear-gradient(45deg, #607D8B, #455A64); }
+        
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .demo-area {
+            position: relative;
+            height: 300px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(146, 244, 40, 0.3);
+        }
+        
+        .ghost-icon, .proton-icon {
+            font-size: 48px;
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .ghost-icon {
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .proton-icon {
+            bottom: 50px;
+            right: 50px;
+        }
+        
+        .ghost-icon:hover, .proton-icon:hover {
+            transform: scale(1.2) translateX(-50%);
+        }
+        
+        .proton-icon:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Teste do Sistema de Efeitos Visuais</h1>
+        
+        <div class="status" id="status">
+            Carregando sistema de efeitos visuais...
+        </div>
+        
+        <div class="demo-area" id="demo-area">
+            <div class="ghost-icon" onclick="testSuctionFromGhost()">👻</div>
+            <div class="proton-icon" onclick="testCelebrationFromProton()">🔫</div>
+            <p style="color: rgba(255,255,255,0.6);">Clique no fantasma ou na proton pack para testar efeitos!</p>
+        </div>
+        
+        <div class="button-grid" id="button-grid">
+            <!-- Botões serão criados dinamicamente -->
+        </div>
+    </div>
+
+    <script src="animations.js"></script>
+    <script src="notifications.js"></script>
+    <script src="visual-effects.js"></script>
+    
+    <script>
+        let effectsReady = false;
+        
+        function testCelebration() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.showCelebrationEffect(
+                    window.innerWidth / 2, 
+                    window.innerHeight / 2, 
+                    'ghost_captured'
+                );
+                showSuccess('Efeito de celebração ativado!');
+            }
+        }
+        
+        function testSuction() {
+            if (window.visualEffectsSystem) {
+                const centerX = window.innerWidth / 2;
+                const centerY = window.innerHeight / 2;
+                window.visualEffectsSystem.showSuctionEffect(
+                    centerX - 100, centerY - 100,  // Posição do fantasma
+                    centerX + 100, centerY + 100   // Posição da proton pack
+                );
+                showInfo('Efeito de sucção ativado!');
+            }
+        }
+        
+        function testProtonBeam() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.startProtonBeamEffect();
+                showWarning('Feixe de prótons ativado!');
+                
+                // Parar após 3 segundos
+                setTimeout(() => {
+                    window.visualEffectsSystem.stopProtonBeamEffect();
+                    showInfo('Feixe de prótons desativado!');
+                }, 3000);
+            }
+        }
+        
+        function testEcto1() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.showCelebrationEffect(
+                    window.innerWidth / 2, 
+                    window.innerHeight / 2, 
+                    'ecto1_unlocked'
+                );
+                showSuccess('🚗 ECTO-1 DESBLOQUEADO! Efeito especial ativado!', 5000);
+            }
+        }
+        
+        function testFailure() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.showCaptureFailEffect(
+                    window.innerWidth / 2, 
+                    window.innerHeight / 2
+                );
+                showError('Falha na captura! Efeito de erro ativado!');
+            }
+        }
+        
+        function testInventoryFull() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.showCelebrationEffect(
+                    window.innerWidth / 2, 
+                    window.innerHeight / 2, 
+                    'inventory_full'
+                );
+                showWarning('Inventário cheio! Efeito de aviso ativado!');
+            }
+        }
+        
+        function clearAllEffects() {
+            if (window.visualEffectsSystem) {
+                window.visualEffectsSystem.clearAllEffects();
+                showInfo('Todos os efeitos foram limpos!');
+            }
+        }
+        
+        function testSuctionFromGhost() {
+            if (window.visualEffectsSystem) {
+                const ghost = document.querySelector('.ghost-icon');
+                const proton = document.querySelector('.proton-icon');
+                const ghostRect = ghost.getBoundingClientRect();
+                const protonRect = proton.getBoundingClientRect();
+                
+                window.visualEffectsSystem.showSuctionEffect(
+                    ghostRect.left + ghostRect.width / 2,
+                    ghostRect.top + ghostRect.height / 2,
+                    protonRect.left + protonRect.width / 2,
+                    protonRect.top + protonRect.height / 2
+                );
+                
+                // Adicionar efeito CSS
+                ghost.classList.add('suction-effect');
+                setTimeout(() => {
+                    ghost.classList.remove('suction-effect');
+                    testCelebrationFromProton();
+                }, 1000);
+            }
+        }
+        
+        function testCelebrationFromProton() {
+            if (window.visualEffectsSystem) {
+                const proton = document.querySelector('.proton-icon');
+                const protonRect = proton.getBoundingClientRect();
+                
+                window.visualEffectsSystem.showCelebrationEffect(
+                    protonRect.left + protonRect.width / 2,
+                    protonRect.top + protonRect.height / 2,
+                    'ghost_captured'
+                );
+                
+                // Adicionar efeito CSS
+                proton.classList.add('celebration-bounce');
+                setTimeout(() => {
+                    proton.classList.remove('celebration-bounce');
+                }, 600);
+            }
+        }
+        
+        function createButtons() {
+            const container = document.getElementById('button-grid');
+            const status = document.getElementById('status');
+            
+            if (typeof window.visualEffectsSystem !== 'undefined' && window.visualEffectsSystem) {
+                status.textContent = '✅ Sistema de efeitos visuais carregado com sucesso!';
+                status.style.background = 'rgba(76, 175, 80, 0.2)';
+                status.style.borderLeft = '4px solid #4CAF50';
+                effectsReady = true;
+                
+                const buttons = [
+                    { text: '🎉 Celebração Captura', onclick: testCelebration, class: 'celebration' },
+                    { text: '🌪️ Efeito Sucção', onclick: testSuction, class: 'suction' },
+                    { text: '⚡ Feixe Prótons', onclick: testProtonBeam, class: 'proton' },
+                    { text: '🚗 Ecto-1 Especial', onclick: testEcto1, class: 'ecto1' },
+                    { text: '❌ Falha Captura', onclick: testFailure, class: 'failure' },
+                    { text: '📦 Inventário Cheio', onclick: testInventoryFull, class: 'celebration' },
+                    { text: '🧹 Limpar Efeitos', onclick: clearAllEffects, class: 'clear' }
+                ];
+                
+                buttons.forEach(btn => {
+                    const button = document.createElement('button');
+                    button.textContent = btn.text;
+                    button.onclick = btn.onclick;
+                    button.className = `test-button ${btn.class}`;
+                    container.appendChild(button);
+                });
+            } else {
+                status.textContent = '❌ Erro: Sistema de efeitos visuais não carregou. Verifique o console.';
+                status.style.background = 'rgba(244, 67, 54, 0.2)';
+                status.style.borderLeft = '4px solid #F44336';
+                console.log('visualEffectsSystem:', window.visualEffectsSystem);
+            }
+        }
+        
+        // Tentar criar botões após carregamento
+        window.addEventListener('load', () => {
+            setTimeout(createButtons, 1000);
+        });
+        
+        // Também tentar após um tempo
+        setTimeout(createButtons, 2000);
+        
+        // Adicionar informações de debug
+        setTimeout(() => {
+            console.log('=== DEBUG INFO ===');
+            console.log('visualEffectsSystem:', window.visualEffectsSystem);
+            console.log('animationManager:', window.animationManager);
+            console.log('notificationSystem:', window.notificationSystem);
+        }, 3000);
+    </script>
+</body>
+</html>

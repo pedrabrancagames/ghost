@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8">
+    <title>Teste PWA - Ghostbusters AR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #92F428;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .test-section {
+            background: rgba(146, 244, 40, 0.1);
+            border: 1px solid #92F428;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-button {
+            background: #92F428;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-weight: bold;
+        }
+        
+        .test-button:hover {
+            background: #7BC91F;
+        }
+        
+        .test-result {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+        }
+        
+        .status-good { color: #4CAF50; }
+        .status-warning { color: #FF9800; }
+        .status-error { color: #F44336; }
+        
+        h1, h2 {
+            color: #92F428;
+        }
+        
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .metric-card {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(146, 244, 40, 0.3);
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #92F428;
+        }
+        
+        .metric-label {
+            color: #cccccc;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🎮 Teste PWA - Ghostbusters AR</h1>
+        
+        <!-- Status Geral -->
+        <div class="test-section">
+            <h2>📊 Status Geral</h2>
+            <div class="metric-grid" id="general-status">
+                <div class="metric-card">
+                    <div class="metric-label">Service Worker</div>
+                    <div class="metric-value" id="sw-status">Verificando...</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Cache API</div>
+                    <div class="metric-value" id="cache-status">Verificando...</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">PWA Instalável</div>
+                    <div class="metric-value" id="installable-status">Verificando...</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Modo Offline</div>
+                    <div class="metric-value" id="offline-status">Online</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Testes de Loading -->
+        <div class="test-section">
+            <h2>⏳ Sistema de Loading</h2>
+            <button class="test-button" onclick="testLoadingScreen()">Testar Tela de Loading</button>
+            <button class="test-button" onclick="testProgressIndicators()">Testar Indicadores</button>
+            <button class="test-button" onclick="testQuickLoader()">Testar Quick Loader</button>
+            <div class="test-result" id="loading-result"></div>
+        </div>
+        
+        <!-- Testes de Cache -->
+        <div class="test-section">
+            <h2>💾 Sistema de Cache</h2>
+            <button class="test-button" onclick="testCacheOperations()">Testar Operações</button>
+            <button class="test-button" onclick="testPreloadAssets()">Testar Pré-carregamento</button>
+            <button class="test-button" onclick="showCacheStats()">Estatísticas</button>
+            <button class="test-button" onclick="clearAllCache()">Limpar Cache</button>
+            <div class="test-result" id="cache-result"></div>
+        </div>
+        
+        <!-- Testes de Performance -->
+        <div class="test-section">
+            <h2>⚡ Monitor de Performance</h2>
+            <button class="test-button" onclick="showPerformanceMetrics()">Métricas Atuais</button>
+            <button class="test-button" onclick="testPerformanceOperation()">Testar Operação</button>
+            <button class="test-button" onclick="togglePerformanceWidget()">Toggle Widget</button>
+            <button class="test-button" onclick="simulateHighLoad()">Simular Carga Alta</button>
+            <div class="test-result" id="performance-result"></div>
+        </div>
+        
+        <!-- Testes de PWA -->
+        <div class="test-section">
+            <h2>📱 Recursos PWA</h2>
+            <button class="test-button" onclick="testInstallPrompt()">Testar Instalação</button>
+            <button class="test-button" onclick="testNotifications()">Testar Notificações</button>
+            <button class="test-button" onclick="testOfflineMode()">Simular Offline</button>
+            <button class="test-button" onclick="checkPWAFeatures()">Verificar Recursos</button>
+            <div class="test-result" id="pwa-result"></div>
+        </div>
+        
+        <!-- Logs em Tempo Real -->
+        <div class="test-section">
+            <h2>📝 Logs em Tempo Real</h2>
+            <button class="test-button" onclick="clearLogs()">Limpar Logs</button>
+            <button class="test-button" onclick="toggleAutoScroll()">Auto Scroll</button>
+            <div class="test-result" id="live-logs" style="height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <!-- Scripts PWA -->
+    <script src="performance-monitor.js"></script>
+    <script src="progress-indicators.js"></script>
+    <script src="cache-manager.js"></script>
+    <script src="pwa-manager.js"></script>
+    <script src="loading-manager.js"></script>
+
+    <script>
+        // Variáveis globais para teste
+        let autoScroll = true;
+        let logCount = 0;
+        
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', async () => {
+            await initializeTests();
+            setupLogCapture();
+            updateStatus();
+            
+            // Atualiza status a cada 5 segundos
+            setInterval(updateStatus, 5000);
+        });
+        
+        async function initializeTests() {
+            log('🚀 Iniciando testes PWA...');
+            
+            // Aguarda inicialização dos sistemas
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('✅ Sistemas PWA carregados');
+        }
+        
+        function updateStatus() {
+            // Service Worker
+            const swStatus = document.getElementById('sw-status');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistration().then(reg => {
+                    swStatus.textContent = reg ? '✅ Ativo' : '❌ Inativo';
+                    swStatus.className = reg ? 'status-good' : 'status-error';
+                });
+            } else {
+                swStatus.textContent = '❌ Não Suportado';
+                swStatus.className = 'status-error';
+            }
+            
+            // Cache API
+            const cacheStatus = document.getElementById('cache-status');
+            if ('caches' in window) {
+                cacheStatus.textContent = '✅ Suportado';
+                cacheStatus.className = 'status-good';
+            } else {
+                cacheStatus.textContent = '❌ Não Suportado';
+                cacheStatus.className = 'status-error';
+            }
+            
+            // PWA Instalável
+            const installableStatus = document.getElementById('installable-status');
+            if (window.pwaManager && window.pwaManager.deferredPrompt) {
+                installableStatus.textContent = '✅ Sim';
+                installableStatus.className = 'status-good';
+            } else {
+                installableStatus.textContent = '❓ Não Detectado';
+                installableStatus.className = 'status-warning';
+            }
+            
+            // Status Offline
+            const offlineStatus = document.getElementById('offline-status');
+            if (navigator.onLine) {
+                offlineStatus.textContent = '🌐 Online';
+                offlineStatus.className = 'status-good';
+            } else {
+                offlineStatus.textContent = '📴 Offline';
+                offlineStatus.className = 'status-warning';
+            }
+        }
+        
+        // Testes de Loading
+        async function testLoadingScreen() {
+            log('🔄 Testando tela de loading...');
+            
+            if (window.loadingManager) {
+                loadingManager.show('Teste de Loading');
+                
+                for (let i = 0; i <= 100; i += 10) {
+                    loadingManager.updateProgress(i, `Progresso: ${i}%`, i, 100);
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                
+                loadingManager.hide();
+                log('✅ Teste de loading concluído');
+            } else {
+                log('❌ Loading Manager não encontrado');
+            }
+        }
+        
+        async function testProgressIndicators() {
+            log('📊 Testando indicadores de progresso...');
+            
+            if (window.progressIndicators) {
+                // Indicador circular
+                const circularId = 'test-circular';
+                progressIndicators.createIndicator(circularId, {
+                    type: 'circular',
+                    position: 'center'
+                });
+                progressIndicators.showIndicator(circularId);
+                
+                for (let i = 0; i <= 100; i += 5) {
+                    progressIndicators.updateIndicator(circularId, i, `${i}%`);
+                    await new Promise(resolve => setTimeout(resolve, 50));
+                }
+                
+                progressIndicators.removeIndicator(circularId);
+                log('✅ Teste de indicadores concluído');
+            } else {
+                log('❌ Progress Indicators não encontrado');
+            }
+        }
+        
+        function testQuickLoader() {
+            log('⚡ Testando quick loader...');
+            
+            if (window.loadingManager) {
+                loadingManager.showQuickLoading('Operação rápida...', 2000);
+                log('✅ Quick loader ativado');
+            } else {
+                log('❌ Loading Manager não encontrado');
+            }
+        }
+        
+        // Testes de Cache
+        async function testCacheOperations() {
+            log('💾 Testando operações de cache...');
+            
+            if (window.cacheManager) {
+                try {
+                    // Testa cache de um recurso
+                    const testUrl = window.location.href;
+                    await cacheManager.cacheResource(testUrl, 'cache-first');
+                    
+                    const isCached = await cacheManager.isResourceCached(testUrl);
+                    log(`✅ Recurso cacheado: ${isCached}`);
+                    
+                    const stats = cacheManager.getStats();
+                    log(`📈 Stats: ${stats.hits} hits, ${stats.misses} misses`);
+                } catch (error) {
+                    log(`❌ Erro no teste de cache: ${error.message}`);
+                }
+            } else {
+                log('❌ Cache Manager não encontrado');
+            }
+        }
+        
+        async function testPreloadAssets() {
+            log('📦 Testando pré-carregamento...');
+            
+            if (window.cacheManager) {
+                const testAssets = [
+                    window.location.href,
+                    '/favicon.ico',
+                    '/site.webmanifest'
+                ];
+                
+                try {
+                    const result = await cacheManager.preloadResources(testAssets, (loaded, total, url) => {
+                        log(`📥 ${loaded}/${total}: ${url.split('/').pop()}`);
+                    });
+                    
+                    log(`✅ Pré-carregamento: ${result.successful}/${result.total} sucessos`);
+                } catch (error) {
+                    log(`❌ Erro no pré-carregamento: ${error.message}`);
+                }
+            } else {
+                log('❌ Cache Manager não encontrado');
+            }
+        }
+        
+        async function showCacheStats() {
+            log('📊 Estatísticas do cache...');
+            
+            if (window.cacheManager) {
+                const stats = cacheManager.getStats();
+                const cachedResources = await cacheManager.listCachedResources();
+                
+                log(`📈 Estatísticas:`);
+                log(`  - Hits: ${stats.hits}`);
+                log(`  - Misses: ${stats.misses}`);
+                log(`  - Hit Rate: ${Math.round(stats.hitRate)}%`);
+                log(`  - Recursos em cache: ${cachedResources.length}`);
+                log(`  - Suportado: ${stats.supported ? 'Sim' : 'Não'}`);
+            } else {
+                log('❌ Cache Manager não encontrado');
+            }
+        }
+        
+        async function clearAllCache() {
+            log('🗑️ Limpando cache...');
+            
+            if (window.cacheManager) {
+                const success = await cacheManager.clearCache();
+                log(success ? '✅ Cache limpo' : '❌ Erro ao limpar cache');
+            } else {
+                log('❌ Cache Manager não encontrado');
+            }
+        }
+        
+        // Testes de Performance
+        function showPerformanceMetrics() {
+            log('⚡ Métricas de performance...');
+            
+            if (window.performanceMonitor) {
+                const metrics = performanceMonitor.getAllMetrics();
+                
+                log(`📊 Métricas atuais:`);
+                log(`  - FPS: ${metrics.fps || 'N/A'}`);
+                log(`  - Memória: ${metrics.memoryUsage ? `${metrics.memoryUsage.used}MB` : 'N/A'}`);
+                log(`  - Cache Hit Rate: ${Math.round(metrics.cacheHitRate || 0)}%`);
+                log(`  - Conexão: ${metrics.connectionType}`);
+                log(`  - Bateria: ${metrics.batteryLevel !== null ? `${metrics.batteryLevel}%` : 'N/A'}`);
+                log(`  - Requisições: ${metrics.networkRequests}`);
+            } else {
+                log('❌ Performance Monitor não encontrado');
+            }
+        }
+        
+        async function testPerformanceOperation() {
+            log('🔬 Testando operação de performance...');
+            
+            if (window.performanceMonitor) {
+                const operation = performanceMonitor.startOperation('test-operation');
+                
+                // Simula operação pesada
+                await new Promise(resolve => {
+                    let sum = 0;
+                    for (let i = 0; i < 1000000; i++) {
+                        sum += Math.random();
+                    }
+                    setTimeout(resolve, 100);
+                });
+                
+                const duration = operation.end();
+                log(`✅ Operação concluída em ${Math.round(duration)}ms`);
+            } else {
+                log('❌ Performance Monitor não encontrado');
+            }
+        }
+        
+        function togglePerformanceWidget() {
+            const widget = document.getElementById('performance-monitor-widget');
+            if (widget) {
+                widget.classList.toggle('hidden');
+                log('🔧 Widget de performance alternado');
+            } else {
+                log('❌ Widget de performance não encontrado');
+            }
+        }
+        
+        function simulateHighLoad() {
+            log('🔥 Simulando carga alta...');
+            
+            // Simula uso intenso de CPU
+            const startTime = Date.now();
+            const duration = 3000; // 3 segundos
+            
+            const heavyLoop = () => {
+                const now = Date.now();
+                if (now - startTime < duration) {
+                    // Operação pesada
+                    for (let i = 0; i < 100000; i++) {
+                        Math.random() * Math.random();
+                    }
+                    requestAnimationFrame(heavyLoop);
+                } else {
+                    log('✅ Simulação de carga alta concluída');
+                }
+            };
+            
+            heavyLoop();
+        }
+        
+        // Testes PWA
+        function testInstallPrompt() {
+            log('📱 Testando prompt de instalação...');
+            
+            if (window.pwaManager) {
+                if (pwaManager.deferredPrompt) {
+                    pwaManager.installApp();
+                    log('✅ Prompt de instalação ativado');
+                } else {
+                    log('⚠️ Prompt de instalação não disponível');
+                }
+            } else {
+                log('❌ PWA Manager não encontrado');
+            }
+        }
+        
+        function testNotifications() {
+            log('🔔 Testando notificações...');
+            
+            if (window.pwaManager) {
+                pwaManager.showNotification('Teste de notificação PWA!', 'info');
+                log('✅ Notificação enviada');
+            } else {
+                log('❌ PWA Manager não encontrado');
+            }
+        }
+        
+        function testOfflineMode() {
+            log('📴 Simulando modo offline...');
+            
+            // Simula mudança de status offline
+            window.dispatchEvent(new Event('offline'));
+            
+            setTimeout(() => {
+                window.dispatchEvent(new Event('online'));
+                log('🌐 Voltando ao modo online');
+            }, 3000);
+            
+            log('⚠️ Modo offline simulado por 3 segundos');
+        }
+        
+        async function checkPWAFeatures() {
+            log('🔍 Verificando recursos PWA...');
+            
+            const features = {
+                'Service Worker': 'serviceWorker' in navigator,
+                'Cache API': 'caches' in window,
+                'Push API': 'PushManager' in window,
+                'Notifications': 'Notification' in window,
+                'Background Sync': 'serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype,
+                'Web Share': 'share' in navigator,
+                'Install Prompt': 'BeforeInstallPromptEvent' in window,
+                'Fullscreen': 'requestFullscreen' in document.documentElement,
+                'Geolocation': 'geolocation' in navigator,
+                'Device Motion': 'DeviceMotionEvent' in window,
+                'Battery API': 'getBattery' in navigator,
+                'Network Info': 'connection' in navigator
+            };
+            
+            log('📋 Recursos PWA disponíveis:');
+            Object.entries(features).forEach(([feature, supported]) => {
+                const status = supported ? '✅' : '❌';
+                log(`  ${status} ${feature}`);
+            });
+        }
+        
+        // Sistema de Logs
+        function setupLogCapture() {
+            // Captura logs do console
+            const originalLog = console.log;
+            const originalWarn = console.warn;
+            const originalError = console.error;
+            
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                if (args[0] && typeof args[0] === 'string' && 
+                    (args[0].includes('[PWA]') || args[0].includes('[Cache]') || 
+                     args[0].includes('[Performance]') || args[0].includes('[App]'))) {
+                    log(args.join(' '));
+                }
+            };
+            
+            console.warn = function(...args) {
+                originalWarn.apply(console, args);
+                if (args[0] && typeof args[0] === 'string' && 
+                    (args[0].includes('[PWA]') || args[0].includes('[Cache]') || 
+                     args[0].includes('[Performance]') || args[0].includes('[App]'))) {
+                    log(`⚠️ ${args.join(' ')}`);
+                }
+            };
+            
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                if (args[0] && typeof args[0] === 'string' && 
+                    (args[0].includes('[PWA]') || args[0].includes('[Cache]') || 
+                     args[0].includes('[Performance]') || args[0].includes('[App]'))) {
+                    log(`❌ ${args.join(' ')}`);
+                }
+            };
+        }
+        
+        function log(message) {
+            const logsContainer = document.getElementById('live-logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            
+            logsContainer.textContent += logEntry;
+            logCount++;
+            
+            // Limita número de logs
+            if (logCount > 100) {
+                const lines = logsContainer.textContent.split('\n');
+                logsContainer.textContent = lines.slice(-50).join('\n');
+                logCount = 50;
+            }
+            
+            // Auto scroll
+            if (autoScroll) {
+                logsContainer.scrollTop = logsContainer.scrollHeight;
+            }
+        }
+        
+        function clearLogs() {
+            document.getElementById('live-logs').textContent = '';
+            logCount = 0;
+            log('📝 Logs limpos');
+        }
+        
+        function toggleAutoScroll() {
+            autoScroll = !autoScroll;
+            log(`📜 Auto scroll: ${autoScroll ? 'Ativado' : 'Desativado'}`);
+        }
+        
+        // Event listeners para eventos PWA
+        window.addEventListener('app-ready', (event) => {
+            log('🚀 App pronto: ' + JSON.stringify(event.detail.status));
+        });
+        
+        window.addEventListener('power-mode-change', (event) => {
+            log(`🔋 Modo de energia: ${event.detail.mode}`);
+        });
+        
+        window.addEventListener('bandwidth-mode-change', (event) => {
+            log(`📶 Modo de largura de banda: ${event.detail.mode}`);
+        });
+        
+        window.addEventListener('low-fps-detected', (event) => {
+            log(`⚡ FPS baixo detectado: ${event.detail.fps}`);
+        });
+        
+        window.addEventListener('online', () => {
+            log('🌐 Conexão restaurada');
+            updateStatus();
+        });
+        
+        window.addEventListener('offline', () => {
+            log('📴 Conexão perdida');
+            updateStatus();
+        });
+    </script>
+</body>
+</html>
